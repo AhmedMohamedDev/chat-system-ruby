@@ -1,0 +1,13 @@
+# Read about fixtures at http://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  title: MyString
+  application_token: 1
+  chat_number: 1
+  messages_count: 1
+
+two:
+  title: MyString
+  application_token: 1
+  chat_number: 1
+  messages_count: 1

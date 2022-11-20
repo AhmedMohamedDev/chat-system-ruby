@@ -1,0 +1,53 @@
+version: '3'
+services:
+  db:
+    image: mysql:5.7.19
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+    volumes:
+      - db-data:/var/lib/mysql
+  elasticsearch:
+    image: elasticsearch:5.5.2
+  rabbitmq:
+    image: rabbitmq:3.6.12-management
+    ports:
+      - 15000:15672
+  redis:
+    image: redis:3.2.11
+  app:
+    build: .
+    command: bash -c './init.sh && ./wait-for-it.sh -t 40 rabbitmq:5672 -- bundle exec rails rabbitmq:setup_queue'
+    volumes:
+      - .:/app
+      - gems_cache:/gems
+    ports: 
+      - "5000:3000"
+    depends_on:
+      - db
+      - elasticsearch
+      - rabbitmq
+      - redis
+    links:
+      - db
+    environment:
+          DB_USER: root
+          DB_NAME: app
+          DB_PASSWORD: password
+          DB_HOST: db
+          REDIS_HOST: redis
+  sneakers:
+    build: .
+    command: './wait-for-it.sh -t 40 rabbitmq:5672 -- bundle exec rake sneakers:run'
+    depends_on:
+      - app
+      - rabbitmq
+    volumes:
+      - .:/app
+      - gems_cache:/gems
+    environment:
+      RAILS_ENV: development
+      WORKERS: JobsWorker
+      REDIS_HOST: redis
+volumes:
+  db-data:
+  gems_cache:
